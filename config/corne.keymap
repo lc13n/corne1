@@ -1,80 +1,165 @@
 /*
- * Copyright (c) 2020 The ZMK Contributors
+ * Jorne Rev1 ZMK Keymap
+ * Converted from QMK Configurator JSON (jorne_rev1_layout_2026-06-04)
  *
- * SPDX-License-Identifier: MIT
+ * Layout: 3x6 + 3 thumb keys per side (42 keys total)
+ *
+ * Layer 0: Base (QWERTY)
+ * Layer 1: Symbols / Function keys
+ * Layer 2: Navigation / Numpad
+ * Layer 3: RGB / System  (NOTE: Layer 3 is defined but has no direct activation
+ *          binding in the base layers — add &mo 3 / &to 3 as needed)
  */
+
 #include <behaviors.dtsi>
 #include <dt-bindings/zmk/keys.h>
 #include <dt-bindings/zmk/bt.h>
+#include <dt-bindings/zmk/rgb.h>
+#include <dt-bindings/zmk/outputs.h>
+#include <dt-bindings/zmk/ext_power.h>
+
+#define BASE  0
+#define SYM   1
+#define NAV   2
+#define FUNC  3
 
 / {
     behaviors {
-        mt: mod_tap {
+        /*
+         * rctl_quot: RCTL_T(KC_QUOT)  →  Hold: RCTRL, Tap: SINGLE_QUOTE
+         * ralt_rbrc: RALT_T(KC_RBRC)  →  Hold: RALT,  Tap: RIGHT_BRACKET
+         * rsft_spc:  RSFT_T(KC_SPC)   →  Hold: RSHIFT, Tap: SPACE
+         * lsft_bspc: LSFT_T(KC_BSPC)  →  Hold: LSHIFT, Tap: BACKSPACE
+         * lctl_ppls: LCTL_T(KC_PPLS)  →  Hold: LCTRL,  Tap: KP_PLUS
+         * rctl_mins: RCTL_T(KC_MINS)  →  Hold: RCTRL,  Tap: MINUS
+         * lalt_eql:  LALT_T(KC_EQL)   →  Hold: LALT,   Tap: EQUAL
+         * rgui_f12:  RGUI_T(KC_F12)   →  Hold: RGUI,   Tap: F12
+         * lctl_peql: LCTL_T(KC_PEQL)  →  Hold: LCTRL,  Tap: KP_EQUAL
+         * rctl_app:  RCTL_T(KC_APP)   →  Hold: RCTRL,  Tap: K_APP (context menu)
+         */
+        rctl_quot: rctl_quot {
             compatible = "zmk,behavior-hold-tap";
             #binding-cells = <2>;
-            flavor = "tap-preferred";
+            flavor = "hold-preferred";
             tapping-term-ms = <200>;
-            quick-tap-ms = <150>;
-            require-prior-idle-ms = <125>;
             bindings = <&kp>, <&kp>;
         };
+        /* All the mod-taps below reuse the same definition pattern.
+           For brevity they all map to &mt in the keymap.
+           If you need per-key tuning, define separate behaviors here. */
     };
 
     keymap {
         compatible = "zmk,keymap";
 
-        default_layer {
-            display-name = "Default";
-            // ┌──────────┬─────┬─────┬─────┬─────┬─────┐   ┌─────┬─────┬─────┬─────┬─────┬──────────┐
-            // │  GRV     │  Q  │  W  │  E  │  R  │  T  │   │  Y  │  U  │  I  │  O  │  P  │  LBKT    │
-            // │  LCTL    │  A  │  S  │  D  │  F  │  G  │   │  H  │  J  │  K  │  L  │  ;  │ RCTL/'   │
-            // │  LALT    │  Z  │  X  │  C  │  V  │  B  │   │  N  │  M  │  ,  │  .  │  /  │ RALT/]   │
-            //               ╰─LT2/TAB─┴─RSFT/SPC─┴─LT1/ENT─╯ ╰─LT1/ESC─┴─LSFT/BSPC─┴─LT2/DEL─╯
-            bindings = 
-&kp GRAVE  &kp Q  &kp W  &kp E     &kp R            &kp T        &kp Y      &kp U           &kp I      &kp O    &kp P     &kp LBKT
-&kp LCTRL  &kp A  &kp S  &kp D     &kp F            &kp G        &kp H      &kp J           &kp K      &kp L    &kp SEMI  &mt RCTRL SQT
-&kp LALT   &kp Z  &kp X  &kp C     &kp V            &kp B        &kp N      &kp M           &kp COMMA  &kp DOT  &kp FSLH  &mt RALT RBKT
-                          &lt 2 TAB  &mt RSHFT SPACE  &lt 1 RET    &lt 1 ESC  &mt LSHFT BSPC  &lt 2 DEL
+        /* ─────────────────────────────────────────────────────────────
+         * Layer 0 – BASE (QWERTY)
+         *
+         * ┌────────┬───┬───┬───┬───┬───┐     ┌───┬───┬───┬───┬───┬────────┐
+         * │ GRAVE  │ Q │ W │ E │ R │ T │     │ Y │ U │ I │ O │ P │  [     │
+         * ├────────┼───┼───┼───┼───┼───┤     ├───┼───┼───┼───┼───┼────────┤
+         * │ LCTRL  │ A │ S │ D │ F │ G │     │ H │ J │ K │ L │ ; │RCTL/' │
+         * ├────────┼───┼───┼───┼───┼───┤     ├───┼───┼───┼───┼───┼────────┤
+         * │ LALT   │ Z │ X │ C │ V │ B │     │ N │ M │ , │ . │ / │RALT/] │
+         * └────────┴───┴───┴───┴───┴───┘     └───┴───┴───┴───┴───┴────────┘
+         *                 ┌──────────┬──────────┬──────────┐ ┌──────────┬──────────┬──────────┐
+         *                 │LT(NAV,TAB)│RSFT_T(SPC)│LT(SYM,ENT)│LT(SYM,ESC)│LSFT_T(BSPC)│LT(NAV,DEL)│
+         *                 └──────────┴──────────┴──────────┘ └──────────┴──────────┴──────────┘
+         * ─────────────────────────────────────────────────────────────*/
+        base_layer {
+            bindings = <
+                &kp GRAVE   &kp Q  &kp W  &kp E  &kp R  &kp T      &kp Y  &kp U  &kp I      &kp O    &kp P     &kp LBKT
+                &kp LCTRL   &kp A  &kp S  &kp D  &kp F  &kp G      &kp H  &kp J  &kp K      &kp L    &kp SEMI  &mt RCTRL SQT
+                &kp LALT    &kp Z  &kp X  &kp C  &kp V  &kp B      &kp N  &kp M  &kp COMMA  &kp DOT  &kp FSLH  &mt RALT RBKT
+
+                &lt NAV TAB   &mt RSHFT SPACE   &lt SYM ENTER
+                &lt SYM ESC   &mt LSHFT BSPC    &lt NAV DEL
             >;
         };
 
-        lower_layer {
-            display-name = "Lower";
-            // ┌──────────┬──────┬─────┬─────┬─────┬─────┐   ┌─────┬─────┬──────┬──────┬──────┬──────────┐
-            // │    F1    │  F2  │  F3 │  F4 │  F5 │  F6 │   │  F7 │  F8 │  F9  │  F10 │  F11 │ RGUI/F12 │
-            // │ LCTL/+   │  !   │  @  │  #  │  $  │  %  │   │  ^  │  &  │  *   │  (   │  )   │ RCTL/-   │
-            // │ LALT/=   │  1   │  2  │  3  │  4  │  5  │   │  6  │  7  │  8   │  9   │  0   │   BSLH   │
-            //                          ╰─TRNS─┴─TRNS─┴─TRNS─╯ ╰─TRNS─┴─TRNS─┴─TRNS─╯
-            bindings = 
-&kp F1          &kp F2    &kp F3  &kp F4    &kp F5    &kp F6       &kp F7     &kp F8    &kp F9    &kp F10  &kp F11  &mt RGUI F12
-&mt LCTRL PLUS  &kp EXCL  &kp AT  &kp HASH  &kp DLLR  &kp PRCNT    &kp CARET  &kp AMPS  &kp ASTRK &kp LPAR &kp RPAR &mt RCTRL MINUS
-&mt LALT EQUAL  &kp N1    &kp N2  &kp N3    &kp N4    &kp N5       &kp N6     &kp N7    &kp N8    &kp N9   &kp N0   &kp BSLH
-                           &trans  &trans    &trans    &trans       &trans     &trans
+        /* ─────────────────────────────────────────────────────────────
+         * Layer 1 – SYM (Symbols + Function keys)
+         *
+         * ┌───────┬────┬────┬────┬────┬────┐     ┌────┬────┬────┬────┬─────┬──────────┐
+         * │  F1   │ F2 │ F3 │ F4 │ F5 │ F6 │     │ F7 │ F8 │ F9 │F10 │ F11 │ RGUI/F12 │
+         * ├───────┼────┼────┼────┼────┼────┤     ├────┼────┼────┼────┼─────┼──────────┤
+         * │LCTL/+ │  ! │  @ │  # │  $ │  % │     │  ^ │  & │  * │  ( │  )  │ RCTL/-   │
+         * ├───────┼────┼────┼────┼────┼────┤     ├────┼────┼────┼────┼─────┼──────────┤
+         * │LALT/= │  1 │  2 │  3 │  4 │  5 │     │  6 │  7 │  8 │  9 │  0  │    \     │
+         * └───────┴────┴────┴────┴────┴────┘     └────┴────┴────┴────┴─────┴──────────┘
+         *                 ┌──────┬──────┬──────┐ ┌──────┬──────┬──────┐
+         *                 │TRANS │TRANS │TRANS │ │TRANS │TRANS │TRANS │
+         *                 └──────┴──────┴──────┘ └──────┴──────┴──────┘
+         * ─────────────────────────────────────────────────────────────*/
+        sym_layer {
+            bindings = <
+                &kp F1           &kp F2    &kp F3   &kp F4    &kp F5   &kp F6      &kp F7     &kp F8    &kp F9    &kp F10   &kp F11   &mt RGUI F12
+                &mt LCTRL KP_PLUS  &kp EXCL  &kp AT   &kp HASH  &kp DLLR &kp PRCNT   &kp CARET  &kp AMPS  &kp STAR  &kp LPAR  &kp RPAR  &mt RCTRL MINUS
+                &mt LALT EQUAL   &kp N1    &kp N2   &kp N3    &kp N4   &kp N5      &kp N6     &kp N7    &kp N8    &kp N9    &kp N0    &kp BSLH
+
+                &trans  &trans  &trans
+                &trans  &trans  &trans
             >;
         };
 
-        raise_layer {
-            display-name = "Raise";
-            // ┌──────────┬────────┬─────┬─────┬─────┬───────┐   ┌──────┬──────┬──────┬──────┬────────┬──────────┐
-            // │  NLCK    │   /    │  7  │  8  │  9  │   -   │   │ VOLU │ HOME │ PSCR │ PGUP │  SLCK  │   CAPS   │
-            // │ LCTL/=   │   *    │  4  │  5  │  6  │   +   │   │ MUTE │ LEFT │  UP  │ RGHT │  INS   │ RCTL/APP │
-            // │  LGUI    │   0    │  1  │  2  │  3  │   ,   │   │ VOLD │ END  │ DOWN │ PGDN │  PAUS  │   TRNS   │
-            //                     ╰─TRNS─┴─TRNS─┴─TRNS─╯ ╰─TRNS─┴─TRNS─┴─TRNS─╯
-            bindings = 
-&kp KP_NUM          &kp KP_SLASH     &kp KP_N7  &kp KP_N8  &kp KP_N9  &kp KP_MINUS    &kp C_VOL_UP  &kp HOME  &kp PSCRN  &kp PG_UP  &kp SLCK         &kp CAPS
-&mt LCTRL KP_EQUAL  &kp KP_MULTIPLY  &kp KP_N4  &kp KP_N5  &kp KP_N6  &kp KP_PLUS     &kp C_MUTE    &kp LEFT  &kp UP     &kp RIGHT  &kp INS          &mt RCTRL K_APP
-&kp LGUI            &kp KP_N0        &kp KP_N1  &kp KP_N2  &kp KP_N3  &kp KP_COMMA    &kp C_VOL_DN  &kp END   &kp DOWN   &kp PG_DN  &kp PAUSE_BREAK  &trans
-                                      &trans     &trans     &trans      &trans          &trans        &trans
+        /* ─────────────────────────────────────────────────────────────
+         * Layer 2 – NAV (Navigation + Numpad)
+         *
+         * ┌──────────┬──────┬────┬────┬────┬──────┐     ┌──────┬──────┬──────┬──────┬──────┬──────┐
+         * │  NLCK    │ KP/  │KP7 │KP8 │KP9 │ KP-  │     │ VOLU │ HOME │ PSCR │ PGUP │ SLCK │ CAPS │
+         * ├──────────┼──────┼────┼────┼────┼──────┤     ├──────┼──────┼──────┼──────┼──────┼──────┤
+         * │LCTL/KP=  │ KP*  │KP4 │KP5 │KP6 │ KP+  │     │ MUTE │ LEFT │  UP  │ RGHT │ INS  │RCTL/APP│
+         * ├──────────┼──────┼────┼────┼────┼──────┤     ├──────┼──────┼──────┼──────┼──────┼──────┤
+         * │  LGUI    │ KP0  │KP1 │KP2 │KP3 │KP,   │     │ VOLD │ END  │ DOWN │ PGDN │ PAUS │TRANS │
+         * └──────────┴──────┴────┴────┴────┴──────┘     └──────┴──────┴──────┴──────┴──────┴──────┘
+         *                 ┌──────┬──────┬──────┐ ┌──────┬──────┬──────┐
+         *                 │TRANS │TRANS │TRANS │ │TRANS │TRANS │TRANS │
+         *                 └──────┴──────┴──────┘ └──────┴──────┴──────┘
+         * ─────────────────────────────────────────────────────────────*/
+        nav_layer {
+            bindings = <
+                &kp KP_NUM       &kp KP_SLASH  &kp KP_N7  &kp KP_N8  &kp KP_N9  &kp KP_MINUS     &kp C_VOL_UP  &kp HOME  &kp PSCRN  &kp PG_UP  &kp SLCK   &kp CAPS
+                &mt LCTRL KP_EQUAL  &kp KP_MULTIPLY  &kp KP_N4  &kp KP_N5  &kp KP_N6  &kp KP_PLUS   &kp K_MUTE    &kp LEFT  &kp UP     &kp RIGHT  &kp INS    &mt RCTRL K_APP
+                &kp LGUI         &kp KP_N0     &kp KP_N1  &kp KP_N2  &kp KP_N3  &kp KP_COMMA     &kp C_VOL_DN  &kp END   &kp DOWN   &kp PG_DN  &kp PAUSE_BREAK  &trans
+
+                &trans  &trans  &trans
+                &trans  &trans  &trans
             >;
         };
 
-        adjust_layer {
-            display-name = "Adjust";
-            bindings = 
-&bootloader  &trans  &trans  &trans  &trans  &trans    &trans  &trans  &trans  &trans  &trans  &bootloader
-&trans       &trans  &trans  &trans  &trans  &trans    &trans  &trans  &trans  &trans  &trans  &trans
-&trans       &trans  &trans  &trans  &trans  &trans    &trans  &trans  &trans  &trans  &trans  &trans
-                             &trans  &trans  &trans    &trans  &trans  &trans
+        /* ─────────────────────────────────────────────────────────────
+         * Layer 3 – FUNC (RGB / System)
+         *
+         * QMK notes:
+         *   QK_BOOT        → &bootloader (ZMK)
+         *   AS_UP/AS_DOWN/AS_TOGG → Auto-Shift: no direct ZMK equivalent;
+         *                            use &trans or implement via ZMK Auto-Shift if available
+         *   UG_TOGG        → &rgb_ug RGB_TOG
+         *   UG_HUEU/D      → &rgb_ug RGB_HUI / RGB_HUD
+         *   UG_SATU/D      → &rgb_ug RGB_SAI / RGB_SAD
+         *   UG_VALU/D      → &rgb_ug RGB_BRI / RGB_BRD
+         *   UG_NEXT        → &rgb_ug RGB_EFF
+         *   SH_TOGG        → Auto-Shift toggle: no direct ZMK equivalent; mapped to &trans
+         *
+         * ┌─────────┬───────┬────────┬────────┬───────┬───────┐     ┌───────┬───────┬────────┬────────┬───────┬─────────┐
+         * │BOOTLOAD │AS_UP  │AS_TOGG │AS_DOWN │TRANS  │TRANS  │     │TRANS  │TRANS  │AS_DOWN │AS_TOGG │AS_UP  │BOOTLOAD │
+         * ├─────────┼───────┼────────┼────────┼───────┼───────┤     ├───────┼───────┼────────┼────────┼───────┼─────────┤
+         * │RGB_TOG  │RGB_HUI│RGB_SAI │RGB_BRI │TRANS  │TRANS  │     │TRANS  │TRANS  │RGB_BRI │RGB_SAI │RGB_HUI│RGB_TOG  │
+         * ├─────────┼───────┼────────┼────────┼───────┼───────┤     ├───────┼───────┼────────┼────────┼───────┼─────────┤
+         * │RGB_EFF  │RGB_HUD│RGB_SAD │RGB_BRD │TRANS  │TRANS  │     │TRANS  │TRANS  │RGB_BRD │RGB_SAD │RGB_HUD│RGB_EFF  │
+         * └─────────┴───────┴────────┴────────┴───────┴───────┘     └───────┴───────┴────────┴────────┴───────┴─────────┘
+         *                 ┌──────┬──────────┬──────┐ ┌──────┬──────────┬──────┐
+         *                 │TRANS │ SH_TOGG  │TRANS │ │TRANS │ SH_TOGG  │TRANS │
+         *                 └──────┴──────────┴──────┘ └──────┴──────────┴──────┘
+         * ─────────────────────────────────────────────────────────────*/
+        func_layer {
+            bindings = <
+                &bootloader  &trans         &trans         &trans         &trans  &trans      &trans  &trans  &trans         &trans         &trans         &bootloader
+                &rgb_ug RGB_TOG  &rgb_ug RGB_HUI  &rgb_ug RGB_SAI  &rgb_ug RGB_BRI  &trans  &trans  &trans  &trans  &rgb_ug RGB_BRI  &rgb_ug RGB_SAI  &rgb_ug RGB_HUI  &rgb_ug RGB_TOG
+                &rgb_ug RGB_EFF  &rgb_ug RGB_HUD  &rgb_ug RGB_SAD  &rgb_ug RGB_BRD  &trans  &trans  &trans  &trans  &rgb_ug RGB_BRD  &rgb_ug RGB_SAD  &rgb_ug RGB_HUD  &rgb_ug RGB_EFF
+
+                &trans  &trans  &trans
+                &trans  &trans  &trans
             >;
         };
     };
