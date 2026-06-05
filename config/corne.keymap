@@ -49,6 +49,14 @@
            If you need per-key tuning, define separate behaviors here. */
     };
 
+    conditional_layers {
+        compatible = "zmk,conditional-layers";
+        tri_layer {
+            if-layers = <SYM NAV>;
+            then-layer = <FUNC>;
+        };
+    };
+
     keymap {
         compatible = "zmk,keymap";
 
